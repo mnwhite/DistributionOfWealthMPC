@@ -6,6 +6,17 @@ dependencies:
   - python=3.9
   - matplotlib>=3.7.0
   - ipython>=8.8.0
-  - econ-ark
+  - black
+  - ruff
+  - jupyter
+  - jupyterlab
+  - jupytext
+  - xarray
+  - scipy
+  - numpy
+  - numba
+  - pandas
   - pip
-prefix: ./env
+  - pip:
+      - git+https://github.com/econ-ark/HARK@master
+      - black[jupyter]
