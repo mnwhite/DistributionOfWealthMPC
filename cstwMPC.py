@@ -23,11 +23,13 @@
 
 # %% code_folding=[]
 # This cell does some standard python setup!
+import sys
+sys.path.insert(0, './code')
 
-import code.calibration as parameters
+import calibration as parameters
 import warnings  # The warnings package allows us to ignore some harmless but alarming warning messages
-from code.calibration import SCF_wealth, SCF_weights
-from code.estimation import estimate
+from calibration import SCF_wealth, SCF_weights
+from estimation import estimate, get_ky_ratio_difference
 
 # Import related generic python packages
 import matplotlib.pyplot as plt  # Plotting tools
@@ -144,7 +146,7 @@ This options file specifies parameter heterogeneity, making the choice in the pa
 uniformly distributed discount factors.
 """
 param_name = "DiscFac"  # Which parameter to introduce heterogeneity in
-dist_type = "uniform"  # Which type of distribution to use
+dist_type = "lognormal"  # Which type of distribution to use
 
 """
 This options file specifies the "standard" work options for cstwMPC, estimating the model only.
@@ -155,7 +157,7 @@ run_sensitivity = [False, False, False, False, False, False, False, False]
 # Computes K/Y ratio for a wide range of beta; should have do_beta_dist = False
 find_beta_vs_KY = False
 # Uses a "tractable consumer" rather than solving full model when True
-do_tractable = True
+do_tractable = False
 
 # Solve for the $\beta-Point$ (do_param_dist=False) for speed
 """
@@ -163,7 +165,7 @@ This options file establishes the second simplest model specification possible:
 with heterogeneity, no aggregate shocks, perpetual youth model, matching net worth.
 """
 
-do_param_dist = False  # Do param-dist version if True, param-point if False
+do_param_dist = True  # Do param-dist version if True, param-point if False
 do_lifecycle = False  # Use lifecycle model if True, perpetual youth if False
 do_agg_shocks = False  # Solve the FBS aggregate shocks version of the model
 # Matches liquid assets data when True, net worth data when False
@@ -182,34 +184,39 @@ options = {
     "do_lifecycle": do_lifecycle,
     "do_agg_shocks": do_agg_shocks,
     "do_liquid": do_liquid,
+    "do_combo_estimation": False
 }
 
 
 EstimationEconomy = estimate(options, parameters)
 
 
+
 # %%
 # Construct the Lorenz curves and plot them
 
-pctiles = np.linspace(0.001, 0.999, 15)
+pctiles = np.linspace(0.001, 0.999, 101)
 SCF_Lorenz_points = get_lorenz_shares(
     SCF_wealth, weights=SCF_weights, percentiles=pctiles
 )
 
-sim_wealth = EstimationEconomy.reap_state["aLvl"][0]
+sim_wealth = np.concatenate(EstimationEconomy.reap_state["aLvl"])
 sim_Lorenz_points = get_lorenz_shares(sim_wealth, percentiles=pctiles)
 
 # Plot
-plt.figure(figsize=(5, 5))
+plt.figure(figsize=(7, 5))
 plt.title("Wealth Distribution")
 plt.plot(pctiles, SCF_Lorenz_points, "--k", label="SCF")
-plt.plot(pctiles, sim_Lorenz_points, "-b", label="Beta-Point")
+plt.plot(pctiles, sim_Lorenz_points, "-b", label="Model")
 plt.plot(pctiles, pctiles, "g-.", label="45 Degree")
-plt.xlabel("Percentile of net worth")
+plt.xlabel("Percentile of wealth")
 plt.ylabel("Cumulative share of wealth")
 plt.legend(loc=2)
 plt.ylim([0, 1])
+plt.xlim([0, 1])
 plt.show("wealth_distribution_1")
+
+breakhere
 
 
 # %% [markdown]

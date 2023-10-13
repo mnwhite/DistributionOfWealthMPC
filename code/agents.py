@@ -365,14 +365,10 @@ class CstwMPCMarket(Market):  # EstimationMarketClass
             )
         elif dist_type == "lognormal":
             # If lognormal, center is the mean and spread is the standard deviation (in log)
-            tail_N = 3
             param_dist = Lognormal(
                 mu=np.log(center) - 0.5 * spread**2,
                 sigma=spread,
-                tail_N=tail_N,
-                tail_bound=[0.0, 0.9],
-                tail_order=np.e,
-            ).discretize(N=param_count - tail_N)
+            ).discretize(N=param_count)
 
         # Distribute the parameters to the various types, assigning consecutive types the same
         # value if there are more types than values
@@ -387,7 +383,7 @@ class CstwMPCMarket(Market):  # EstimationMarketClass
                         self.Population * param_dist.pmv[b] * self.TypeWeight[n]
                     )
                 )
-                print(param_dist.atoms[0, b])
+                #print(param_dist.atoms[0, b])
                 self.agents[j].assign_parameters(**{param_name: param_dist.atoms[0, b]})
                 j += 1
             b += 1
@@ -406,7 +402,8 @@ class CstwMPCMarket(Market):  # EstimationMarketClass
         """
         # Ignore the first X periods to allow economy to stabilize from initial conditions
         KYratioSim = np.mean(np.array(self.history["KtoYnow"])[self.ignore_periods :])
-        diff = KYratioSim - self.KYratioTarget
+        diff = np.log(KYratioSim) - np.log(self.KYratioTarget)
+        #diff = np.log(KYratioSim) - np.log(self.KYratioTarget)
 
         return diff
 

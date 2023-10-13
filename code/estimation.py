@@ -42,7 +42,7 @@ import numpy as np
 from HARK.utilities import get_lorenz_shares
 from scipy.optimize import minimize, minimize_scalar, root_scalar
 
-from code.agents import AggDoWAgent, AggDoWMarket, DoWAgent, DoWMarket
+from agents import AggDoWAgent, AggDoWMarket, DoWAgent, DoWMarket
 
 
 def get_ky_ratio_difference(
@@ -118,7 +118,7 @@ def find_lorenz_distance_at_target_ky(
     optimal_center = root_scalar(
         get_ky_ratio_difference,
         args=(economy, param_name, param_count, spread, dist_type),
-        method="toms748",
+        method="brenth",
         bracket=center_range,
         xtol=10 ** (-6),
     ).root
@@ -238,7 +238,7 @@ def get_spec_name(options):
 
 def get_param_count(options):
     if options["do_param_dist"]:
-        param_count = 7  # Number of discrete beta types in beta-dist
+        param_count = 19  # Number of discrete beta types in beta-dist
     else:
         param_count = 1  # Just one beta type in beta-point
 
@@ -421,7 +421,7 @@ def estimate(options, params):
                         param_count,
                         options["dist_type"],
                     ),
-                    bounds=[param_range, spread_range],
+                    bounds=None#[param_range, spread_range],
                 )
 
                 t_end = time()
@@ -460,7 +460,7 @@ def estimate(options, params):
                     0.0,
                     options["dist_type"],
                 ),
-                method="toms748",
+                method="brenth",
                 bracket=param_range,
                 xtol=1e-6,
             ).root
